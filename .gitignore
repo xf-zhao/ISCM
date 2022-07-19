@@ -1,0 +1,5 @@
+*.DS*
+.idea*
+.*__pycha*
+exp_local/
+__pycache__/

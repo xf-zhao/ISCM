@@ -1,0 +1,62 @@
+defaults:
+  - agent: ddpg
+  - override hydra/launcher: submitit_local
+
+# mode
+reward_free: true
+# task settings
+domain: manipulation # primal task will be infered in runtime
+obs_type: states # [states, pixels]
+screen_width: 84
+screen_height: 84
+frame_stack: 3 # only works if obs_type=pixels
+action_repeat: 1 # set to 2 for pixels
+discount: 0.99
+# train settings
+num_train_frames: 400050
+num_seed_frames: 4000
+# eval
+eval_every_frames: 10000
+num_eval_episodes: 10
+# snapshot
+weights_log: false
+weights_log_freq: 1000
+snapshots: [50000, 100000, 200000, 300000, 400000]
+snapshot_dir: ../../../models/${obs_type}/${domain}/${agent.name}/${seed}
+# replay buffer
+replay_buffer_size: 100000
+replay_buffer_num_workers: 4
+batch_size: ${agent.batch_size}
+nstep: ${agent.nstep}
+update_encoder: true # should always be true for pre-training
+clip_grad_value: -1 # 0.00001
+do_random: false
+omit_crossmodal_loss: false
+# misc
+seed: 1
+port: -1
+device: cuda
+device_id: -1 # -1 for seed -1, or 0,1,2,3
+# device: cpu
+save_video: true
+save_train_video: true
+save_train_video_every: 100
+use_tb: false
+use_wandb: true
+# experiment
+experiment: exp
+
+hydra:
+  run:
+    dir: ./exp_local/${now:%Y.%m.%d}/${now:%H%M%S}_${agent.name}
+  sweep:
+    dir: ./exp_sweep/${now:%Y.%m.%d}/${now:%H%M}_${agent.name}_${experiment}
+    subdir: ${hydra.job.num}
+  launcher:
+    timeout_min: 4300
+    cpus_per_task: 10
+    gpus_per_node: 1
+    tasks_per_node: 1
+    mem_gb: 160
+    nodes: 1
+    submitit_folder: ./exp_sweep/${now:%Y.%m.%d}/${now:%H%M}_${agent.name}_${experiment}/.slurm
